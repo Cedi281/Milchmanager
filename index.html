@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <title>Milchtank-Verwaltung</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="manifest" href="manifest.json">
+  <style>
+    body { font-family: Arial, sans-serif; text-align: center; background: #f7f7f7; padding: 20px; }
+    .tank-container { display: flex; justify-content: space-around; flex-wrap: wrap; gap: 20px; }
+    .tank { width: 120px; height: 200px; background: #ddd; border-radius: 10px; position: relative; cursor: pointer; display: flex; align-items: flex-end; justify-content: center; }
+    .tank-label { position: absolute; top: 10px; width: 100%; text-align: center; font-weight: bold; }
+    .tank-amount { margin-bottom: 10px; font-size: 18px; }
+    #modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; border: 1px solid #ccc; padding: 20px; z-index: 1000; }
+    #modal input { width: 60px; }
+    #overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 999; }
+    button { margin: 5px; }
+  </style>
+</head>
+<body>
+  <h1>Milchtank-Verwaltung</h1>
+  <div class="tank-container">
+    <div class="tank" onclick="openModal(1)"><div class="tank-label">Tank 1</div><div class="tank-amount" id="amount-1">0 L</div></div>
+    <div class="tank" onclick="openModal(2)"><div class="tank-label">Tank 2</div><div class="tank-amount" id="amount-2">0 L</div></div>
+    <div class="tank" onclick="openModal(3)"><div class="tank-label">Tank 3</div><div class="tank-amount" id="amount-3">0 L</div></div>
+    <div class="tank" onclick="openModal(4)"><div class="tank-label">Tank 4</div><div class="tank-amount" id="amount-4">0 L</div></div>
+  </div>
+  <div id="overlay"></div>
+  <div id="modal">
+    <h2 id="modal-title">Tank</h2>
+    <input type="number" id="milk-amount" placeholder="Menge (L)" /><br/>
+    <button onclick="addMilk()">Hinzufügen</button>
+    <button onclick="removeMilk()">Abziehen</button>
+    <button onclick="closeModal()">Schließen</button>
+  </div>
+  <script>
+    let currentTank = 1;
+    for (let i = 1; i <= 4; i++) {
+      const saved = localStorage.getItem(`tank${i}`) || 0;
+      document.getElementById(`amount-${i}`).innerText = saved + ' L';
+    }
+    function openModal(tankNumber) {
+      currentTank = tankNumber;
+      document.getElementById('modal-title').innerText = 'Tank ' + tankNumber;
+      document.getElementById('milk-amount').value = '';
+      document.getElementById('overlay').style.display = 'block';
+      document.getElementById('modal').style.display = 'block';
+    }
+    function closeModal() {
+      document.getElementById('overlay').style.display = 'none';
+      document.getElementById('modal').style.display = 'none';
+    }
+    function addMilk() {
+      const value = parseFloat(document.getElementById('milk-amount').value);
+      if (isNaN(value) || value <= 0) { alert('Bitte eine gültige Menge eingeben.'); return; }
+      let current = parseFloat(localStorage.getItem(`tank${currentTank}`)) || 0;
+      current += value;
+      localStorage.setItem(`tank${currentTank}`, current);
+      document.getElementById(`amount-${currentTank}`).innerText = current + ' L';
+      closeModal();
+    }
+    function removeMilk() {
+      const value = parseFloat(document.getElementById('milk-amount').value);
+      if (isNaN(value) || value <= 0) { alert('Bitte eine gültige Menge eingeben.'); return; }
+      let current = parseFloat(localStorage.getItem(`tank${currentTank}`)) || 0;
+      current = Math.max(0, current - value);
+      localStorage.setItem(`tank${currentTank}`, current);
+      document.getElementById(`amount-${currentTank}`).innerText = current + ' L';
+      closeModal();
+    }
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('service-worker.js').then(() => console.log('SW registriert!')).catch(err => console.error(err));
+    }
+  </script>
+</body>
+</html>
