@@ -1,0 +1,78 @@
+
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Milchverwaltung</title>
+  <link rel="manifest" href="manifest.json">
+  <style>
+    body { font-family: sans-serif; text-align: center; background: #f9f9f9; padding: 20px; }
+    .tank { margin: 20px; padding: 20px; border: 1px solid #ccc; border-radius: 10px; display: inline-block; }
+    input { width: 80px; }
+    button { margin: 5px; padding: 10px 20px; }
+    #archiveModal { display: none; position: fixed; top: 10%; left: 50%; transform: translateX(-50%); background: white; border: 1px solid #ccc; padding: 20px; z-index: 1000; }
+  </style>
+</head>
+<body>
+  <h1>Milchmengen Verwaltung</h1>
+  <div id="tanks"></div>
+
+  <div id="archiveModal">
+    <h3>Archiv</h3>
+    <ul id="archiveList"></ul>
+    <button onclick="closeArchive()">Schließen</button>
+  </div>
+
+  <script>
+    const tanks = [1, 2, 3, 4];
+    const tankData = {};
+
+    tanks.forEach(tank => {
+      tankData[tank] = { value: 0, log: [] };
+    });
+
+    function renderTanks() {
+      const container = document.getElementById('tanks');
+      container.innerHTML = '';
+      tanks.forEach(tank => {
+        container.innerHTML += \`
+          <div class="tank">
+            <h2>Tank \${tank}</h2>
+            <p>Aktuell: <span id="value-\${tank}">0</span> Liter</p>
+            <input type="number" id="input-\${tank}" placeholder="Liter">
+            <button onclick="updateTank(\${tank})">Speichern</button><br/>
+            <button onclick="openArchive(\${tank})">📜 Archiv</button>
+          </div>
+        \`;
+      });
+    }
+
+    function updateTank(tank) {
+      const input = document.getElementById('input-' + tank);
+      const amount = parseInt(input.value);
+      if (!isNaN(amount)) {
+        tankData[tank].value += amount;
+        tankData[tank].log.push({ amount: amount, time: new Date().toLocaleString() });
+        document.getElementById('value-' + tank).innerText = tankData[tank].value;
+        input.value = '';
+      }
+    }
+
+    function openArchive(tank) {
+      const archiveList = document.getElementById('archiveList');
+      archiveList.innerHTML = '';
+      tankData[tank].log.forEach(entry => {
+        archiveList.innerHTML += \`<li>\${entry.amount} Liter am \${entry.time}</li>\`;
+      });
+      document.getElementById('archiveModal').style.display = 'block';
+    }
+
+    function closeArchive() {
+      document.getElementById('archiveModal').style.display = 'none';
+    }
+
+    renderTanks();
+  </script>
+</body>
+</html>
