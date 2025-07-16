@@ -1,0 +1,77 @@
+
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Milchtank App</title>
+  <link rel="manifest" href="manifest.json"/>
+  <style>
+    body { font-family: sans-serif; text-align: center; padding: 20px; background: #f0f0f0; }
+    .tank { margin: 20px; display: inline-block; }
+    .tank img { width: 100px; }
+    button { margin: 5px; padding: 10px; }
+    #logModal { position: fixed; top: 20%; left: 50%; transform: translate(-50%, 0); background: #fff; border: 1px solid #ccc; padding: 20px; z-index: 999; }
+  </style>
+</head>
+<body>
+  <h1>Milchtank Verwaltung</h1>
+  <div id="tanks"></div>
+
+  <div id="logModal" style="display:none;">
+    <h3>Archiv</h3>
+    <ul id="logList"></ul>
+    <button onclick="closeLog()">Schließen</button>
+  </div>
+
+  <script>
+    let milkAmounts = JSON.parse(localStorage.getItem('milkAmounts')) || {1:0, 2:0, 3:0, 4:0};
+
+    function updateMilk(tank, change) {
+      milkAmounts[tank] += change;
+      if (milkAmounts[tank] < 0) milkAmounts[tank] = 0;
+      localStorage.setItem('milkAmounts', JSON.stringify(milkAmounts));
+
+      // Archiv speichern
+      const logs = JSON.parse(localStorage.getItem(`log_${tank}`)) || [];
+      logs.push({
+        amount: change,
+        date: new Date().toLocaleString()
+      });
+      localStorage.setItem(`log_${tank}`, JSON.stringify(logs));
+
+      renderTanks();
+    }
+
+    function renderTanks() {
+      const container = document.getElementById('tanks');
+      container.innerHTML = '';
+      for (let i = 1; i <= 4; i++) {
+        container.innerHTML += `
+          <div class="tank">
+            <img src="icon.png" alt="Tank ${i}"/>
+            <h2>Tank ${i}: ${milkAmounts[i]} L</h2>
+            <button onclick="updateMilk(${i}, 10)">+10L</button>
+            <button onclick="updateMilk(${i}, -10)">-10L</button>
+            <button onclick="showLog(${i})">📜 Archiv</button>
+          </div>`;
+      }
+    }
+
+    function showLog(tank) {
+      const logs = JSON.parse(localStorage.getItem(`log_${tank}`)) || [];
+      const logList = document.getElementById('logList');
+      logList.innerHTML = logs.map(log =>
+        `<li>${log.date}: ${log.amount > 0 ? '+' : ''}${log.amount} L</li>`
+      ).join('');
+      document.getElementById('logModal').style.display = 'block';
+    }
+
+    function closeLog() {
+      document.getElementById('logModal').style.display = 'none';
+    }
+
+    renderTanks();
+  </script>
+</body>
+</html>
